@@ -77,7 +77,7 @@ install-tools: $(MISSPELL)
 
 .PHONY: build
 build:
-	$(DOCKER_COMPOSE_CMD) build
+	$(DOCKER_COMPOSE_CMD) -f docker-compose.rapids.yml build
 
 .PHONY: build-and-push-dockerhub
 build-and-push-dockerhub:
@@ -147,6 +147,17 @@ start-minimal:
 	@echo "Go to http://localhost:8080/loadgen/ for the Load Generator UI."
 	@echo "Go to https://opentelemetry.io/docs/demo/feature-flags/ to learn how to change feature flags."
 
+.PHONY: start-rapids
+start-rapids:
+	$(DOCKER_COMPOSE_CMD) $(DOCKER_COMPOSE_ENV) -f docker-compose.rapids.yml up --force-recreate --remove-orphans --detach
+	@echo ""
+	@echo "OpenTelemetry Demo in minimal mode is running."
+	@echo "Go to http://localhost:8080 for the demo UI."
+	@echo "Go to http://localhost:8080/jaeger/ui for the Jaeger UI."
+	@echo "Go to http://localhost:8080/grafana/ for the Grafana UI."
+	@echo "Go to http://localhost:8080/loadgen/ for the Load Generator UI."
+	@echo "Go to https://opentelemetry.io/docs/demo/feature-flags/ to learn how to change feature flags."
+
 .PHONY: stop
 stop:
 	$(DOCKER_COMPOSE_CMD) down --remove-orphans --volumes
@@ -190,4 +201,3 @@ ifdef service
 else
 	@echo "Please provide a service name using `service=[service name]` or `SERVICE=[service name]`"
 endif
-

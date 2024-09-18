@@ -37,20 +37,16 @@ static_resources:
                       domains:
                         - "*"
                       routes:
-                        - match: { prefix: "/loadgen" }
-                          route: { cluster: loadgen, prefix_rewrite: "/" }
                         - match: { prefix: "/otlp-http/" }
                           route: { cluster: opentelemetry_collector_http, prefix_rewrite: "/" }
+                        - match: { prefix: "/events" }
+                          route: { cluster: githubactions }
                         - match: { prefix: "/jaeger" }
                           route: { cluster: jaeger }
-                        - match: { prefix: "/grafana" }
-                          route: { cluster: grafana }
-                        - match: { prefix: "/images/" }
-                          route: { cluster: imageprovider, prefix_rewrite: "/" }
-                        - match: { prefix: "/flagservice/" }
-                          route: { cluster: flagservice, prefix_rewrite: "/", timeout: 0s }
+                        - match: { prefix: "/fluentbit" }
+                          route: { cluster: fluentbit }
                         - match: { prefix: "/" }
-                          route: { cluster: frontend }
+                          route: { cluster: opentelemetry_collector_http }
                 http_filters:
                   - name: envoy.filters.http.fault
                     typed_config:
@@ -94,66 +90,18 @@ static_resources:
                     socket_address:
                       address: ${OTEL_COLLECTOR_HOST}
                       port_value: ${OTEL_COLLECTOR_PORT_HTTP}
-    - name: frontend
+    - name: githubactions
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
       load_assignment:
-        cluster_name: frontend
+        cluster_name: githubactions
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
                     socket_address:
-                      address: ${FRONTEND_HOST}
-                      port_value: ${FRONTEND_PORT}
-    - name: imageprovider
-      type: STRICT_DNS
-      lb_policy: ROUND_ROBIN
-      load_assignment:
-        cluster_name: imageprovider
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: ${IMAGE_PROVIDER_HOST}
-                      port_value: ${IMAGE_PROVIDER_PORT}
-    - name: flagservice
-      type: STRICT_DNS
-      lb_policy: ROUND_ROBIN
-      load_assignment:
-        cluster_name: flagservice
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: ${FLAGD_HOST}
-                      port_value: ${FLAGD_PORT}
-    - name: loadgen
-      type: STRICT_DNS
-      lb_policy: ROUND_ROBIN
-      load_assignment:
-        cluster_name: loadgen
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: ${LOCUST_WEB_HOST}
-                      port_value: ${LOCUST_WEB_PORT}
-    - name: grafana
-      type: STRICT_DNS
-      lb_policy: ROUND_ROBIN
-      load_assignment:
-        cluster_name: grafana
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: ${GRAFANA_SERVICE_HOST}
-                      port_value: ${GRAFANA_SERVICE_PORT}
+                      address: ${OTEL_COLLECTOR_HOST}
+                      port_value: ${GHA_PORT}
     - name: jaeger
       type: STRICT_DNS
       lb_policy: ROUND_ROBIN
@@ -166,6 +114,18 @@ static_resources:
                     socket_address:
                       address: ${JAEGER_SERVICE_HOST}
                       port_value: ${JAEGER_SERVICE_PORT}
+    - name: fluentbit
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: fluentbit
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: fluentbit
+                      port_value: 24224
 admin:
   address:
     socket_address:
